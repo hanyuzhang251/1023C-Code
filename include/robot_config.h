@@ -115,7 +115,7 @@ inline void reset_arm() {
 
     for (int i = 0; i < 500; ++i) {
         (void)arm.move(0);
-        chisel::wait(1);
+        wait(1);
     }
 
     arm_target_pos.store(0);

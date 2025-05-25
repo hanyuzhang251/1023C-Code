@@ -198,7 +198,7 @@ void menu_update() {
                             mogo_toggle.value = mogo_value;
 
                             while (arm.get_current_draw() < 2400) {
-                                chisel::wait(PROCESS_DELAY);
+                                wait(PROCESS_DELAY);
                             }
 
                             reset_arm();
@@ -319,7 +319,7 @@ void menu_update() {
                             arm_target_pos.fetch_add(-9999);
 
                             while (arm.get_current_draw() < 2300) {
-                                chisel::wait(PROCESS_DELAY);
+                                wait(PROCESS_DELAY);
                             }
 
                             reset_arm();
@@ -674,7 +674,7 @@ void pos_3p1r_aut(const bool side = true) {
         arm_target_pos.fetch_add(-9999);
 
         while (arm.get_current_draw() < 2300) {
-            chisel::wait(PROCESS_DELAY);
+            wait(PROCESS_DELAY);
         }
 
         reset_arm();
@@ -788,7 +788,7 @@ void neg_rr(const bool side = true) {
         arm_target_pos.fetch_add(-9999);
 
         while (arm.get_current_draw() < 2300) {
-            chisel::wait(PROCESS_DELAY);
+            wait(PROCESS_DELAY);
         }
 
         reset_arm();
@@ -974,7 +974,7 @@ void neg_5p1r_safe(const bool side = true) {
         arm_target_pos.fetch_add(-9999);
 
         while (arm.get_current_draw() < 2300) {
-            chisel::wait(PROCESS_DELAY);
+            wait(PROCESS_DELAY);
         }
 
         reset_arm();
@@ -1140,7 +1140,7 @@ void neg_4p1p1_aut(const bool side = true) {
         arm_target_pos.fetch_add(-9999);
 
         while (arm.get_current_draw() < 2300) {
-            chisel::wait(PROCESS_DELAY);
+            wait(PROCESS_DELAY);
         }
 
         reset_arm();
@@ -1305,7 +1305,7 @@ void opcontrol() {
     //     arm_target_pos.fetch_add(-9999);
     //
     //     while (arm.get_current_draw() < 2300) {
-    //         chisel::wait(PROCESS_DELAY);
+    //         wait(PROCESS_DELAY);
     //     }
     //
     //     reset_arm();
