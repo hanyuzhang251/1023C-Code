@@ -13,14 +13,18 @@
 
 namespace chisel::logger {
     class Logger {
+        static constexpr uint8_t MAX_SINKS = 16;
         CircularBuffer<LogEntry> backtrace;
-        std::vector<Sink *> targets{};
+        Sink* targets[MAX_SINKS]{};
+        uint8_t sink_count = 0;
 
     public:
-        Logger(uint16_t size, std::initializer_list<Sink*> sinks);
+        explicit Logger(uint16_t size);
+        
+        bool add_sink(Sink* sink);
 
         void log(LogEntry log_entry);
-
+        
         void dump_backtrace() const;
     };
 }
