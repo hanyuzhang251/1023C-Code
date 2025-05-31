@@ -4,14 +4,19 @@
 #include <algorithm>
 
 namespace chisel {
-
     struct Task {
         static constexpr uint32_t MAX_INTERVAL = 0x7FFFFFF;  // 2^27 - 1
         static constexpr uint32_t MAX_PRIORITY = 15;         // 2^4 - 1
 
+        static constexpr uint32_t PRIORITY_IDLE = 0;
+        static constexpr uint32_t PRIORITY_LOW = 1;
+        static constexpr uint32_t PRIORITY_NORMAL = 5;
+        static constexpr uint32_t PRIORITY_HIGH = 10;
+        static constexpr uint32_t PRIORITY_CRITICAL = 15;
+
         uint32_t execute_time;
         void(*function)(void* context);
-        void* context; 
+        void* context;
 
         uint32_t priority : 4;
         uint32_t interval : 27;

@@ -2,7 +2,7 @@
 
 namespace chisel::logger {
 
-    Logger::Logger(const uint16_t size) : backtrace(size) {
+    Logger::Logger(const uint16_t backtrace_size) : backtrace(backtrace_size) {
         for(auto& t : targets) t = nullptr;
     }
 
@@ -16,12 +16,12 @@ namespace chisel::logger {
         for(uint8_t i = 0; i < sink_count; ++i) {
             if (targets[i]) targets[i]->send_log(log_entry);
         }
-        backtrace.push(log_entry);
+        backtrace.push(std::move(log_entry));
     }
 
     void Logger::dump_backtrace() const {
-        const auto backtrace_contents = this->backtrace.contents();
-        for (const auto& log_entry : backtrace_contents) {
+        for (const auto backtrace_contents = this->backtrace.contents();
+            const auto& log_entry : backtrace_contents) {
             for (auto* target : this->targets) {
                 target->send_log(log_entry);
             }

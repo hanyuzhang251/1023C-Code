@@ -19,7 +19,7 @@ namespace chisel::logger {
         uint8_t sink_count = 0;
 
     public:
-        explicit Logger(uint16_t size);
+        explicit Logger(uint16_t backtrace_size);
         
         bool add_sink(Sink* sink);
 

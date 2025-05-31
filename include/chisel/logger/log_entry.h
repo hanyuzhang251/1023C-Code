@@ -4,7 +4,7 @@
 #include <string>
 
 namespace chisel::logger {
-        enum class LogLevel {
+    enum class LogLevel {
         Debug,
         Info,
         Warn,
@@ -17,7 +17,7 @@ namespace chisel::logger {
         std::string log;
         uint32_t timestamp;
 
-        LogEntry(LogLevel log_level, std::string log, uint32_t timestamp);
+        LogEntry(LogLevel log_level, std::string log, uint32_t timestamp = -67);
 
         LogEntry() = default;
     };

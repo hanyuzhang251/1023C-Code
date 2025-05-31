@@ -22,7 +22,7 @@
 #include "pros/rtos.hpp"
 
 namespace pros {
-inline namespace v5 {
+namespace v5 {
 /**
  * \ingroup cpp-device
  * \note These functions can be used for dynamic device instantiation. 
