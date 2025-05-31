@@ -6,21 +6,23 @@
 namespace chisel {
 
     struct Task {
-        static constexpr uint16_t MAX_INTERVAL = 0x7FFF;
+        static constexpr uint32_t MAX_INTERVAL = 0x7FFFFFF;  // 2^27 - 1
+        static constexpr uint32_t MAX_PRIORITY = 15;         // 2^4 - 1
 
         uint32_t execute_time;
-        uint8_t priority;
         void(*function)(void* context);
-        void* context;
+        void* context; 
 
-        uint16_t interval : 15;
-        uint16_t recurring : 1;
+        uint32_t priority : 4;
+        uint32_t interval : 27;
+        uint32_t recurring : 1;
 
-        Task(uint32_t execute_time, uint8_t priority,
-             void (*func)(void*), void* ctx = nullptr, uint16_t itv = 0)
-             : execute_time(execute_time), priority(priority), function(func), context(ctx) {
+        Task(const uint32_t execute_time, const uint32_t priority,
+             void (*func)(void*), void* ctx = nullptr, const uint32_t itv = 0)
+             : execute_time(execute_time), function(func), context(ctx) {
             recurring = itv > 0;
 
+            this->priority = std::min(MAX_PRIORITY, priority);
             interval = std::min(MAX_INTERVAL, itv);
         }
 
