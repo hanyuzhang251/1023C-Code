@@ -6,34 +6,23 @@
 namespace chisel {
 
 struct Pose {
-    std::atomic<float> x;
-    std::atomic<float> y;
-    std::atomic<float> h;
+    float x = 0;
+    float y = 0;
+    float h = 0;
 
     Pose(const float x, const float y, const float h): x(x), y(y), h(h) {}
 
-    Pose(const Pose &other): x(other.x.load()), y(other.y.load()), h(other.h.load()) {}
+    Pose() = default;
 
-    Pose& operator=(const Pose &other) {
-        if (this != &other) {
-            x.store(other.x.load());
-            y.store(other.y.load());
-            h.store(other.h.load());
-        }
-        return *this;
+    Pose operator+(const Pose &other) const {
+        return {x + other.x, y + other.y, h + other.h};
     }
 
-    auto operator()() {
-        return std::tie(x, y, h);
-    };
-
-    static Pose add(const Pose &a, const Pose &b) {
-        return {a.x.load() + b.x.load(), a.y.load() + b.y.load(), a.h.load() + b.h.load()};
+    Pose operator-(const Pose &other) const {
+        return {x - other.x, y - other.y, h - other.h};
     }
 
-    static Pose sub(const Pose &a, const Pose &b) {
-        return {a.x.load() - b.x.load(), a.y.load() - b.y.load(), a.h.load() - b.h.load()};
-    }
+    Pose& operator=(const Pose &other) = default;
 };
 
 } // namespace chisel
