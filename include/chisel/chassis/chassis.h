@@ -18,11 +18,12 @@ namespace chisel {
         Scheduler scheduler;
 
         DriveTrain drivetrain;
+        Odom odom;
 
         std::vector<DeviceMetadata> devices{};
 
         void register_device(DeviceMetadata &&device);
 
-        Chassis(DriveTrain &&drivetrain);
+        explicit Chassis(DriveTrain &&drivetrain, Odom &&odom);
     };
 }
