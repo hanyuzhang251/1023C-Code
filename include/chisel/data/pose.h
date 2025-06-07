@@ -6,11 +6,11 @@
 namespace chisel {
 
 struct Pose {
-    float x = 0;
-    float y = 0;
-    float h = 0;
+    double x = 0;
+    double y = 0;
+    double h = 0;
 
-    Pose(const float x, const float y, const float h): x(x), y(y), h(h) {}
+    Pose(const double x, const double y, const double h): x(x), y(y), h(h) {}
 
     Pose() = default;
 
