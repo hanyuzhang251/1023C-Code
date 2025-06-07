@@ -7,9 +7,9 @@ namespace chisel::monitor {
         const bool is_first_call = first_call;
         first_call = false;
 
-        auto context_pair = static_cast<std::pair<logger::Logger *, std::vector<DeviceMetadata> *> *>(context);
-        auto logger = static_cast<logger::Logger *>(context_pair->first);
-        auto devices = static_cast<std::vector<DeviceMetadata> *>(context_pair->second);
+        const auto context_pair = static_cast<std::pair<logger::Logger *, std::vector<DeviceMetadata> *> *>(context);
+        const auto logger = context_pair->first;
+        const auto devices = context_pair->second;
 
         for (auto &device: *devices) {
             const char *name = device.name;
