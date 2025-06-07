@@ -17,5 +17,5 @@ temp.errors
 .d/
 
 # IDE
-.idea/editor.xml
+.idea/
 .clang-format
