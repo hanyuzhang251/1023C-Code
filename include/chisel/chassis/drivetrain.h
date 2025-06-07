@@ -1,19 +1,18 @@
 #pragma once
 
-    #include "../../main.h"
+#include "../../main.h"
 
 namespace chisel {
     struct DriveTrain {
-        std::vector<pros::Motor*> left_motors;
-        std::vector<pros::Motor*> right_motors;;
+        pros::MotorGroup *left_motor_group;
+        pros::MotorGroup *right_motor_group;
 
         float wheel_size;
         float track_width;
         float gear_ratio;
 
         DriveTrain(
-            std::vector<pros::Motor*>&& left_motors, std::vector<pros::Motor*>&& right_motors,
-            float wheel_size, float track_width, float gear_ratio
-        );
+            pros::MotorGroup *left_motor_group, pros::MotorGroup *right_motor_group,
+            float wheel_size, float track_width, float gear_ratio);
     };
 }

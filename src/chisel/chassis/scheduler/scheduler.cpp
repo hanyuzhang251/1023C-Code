@@ -2,7 +2,7 @@
 
 namespace chisel {
 
-    Scheduler::Scheduler(const uint16_t max_tasks) : MAX_TASKS(max_tasks) {
+    Scheduler::Scheduler(logger::Logger* logger, const uint16_t max_tasks) : logger(logger), MAX_TASKS(max_tasks) {
         std::vector<Task> container;
         container.reserve(MAX_TASKS);
 
@@ -10,7 +10,10 @@ namespace chisel {
     }
 
     bool Scheduler::add_task(Task task) {
-        if (task_count >= MAX_TASKS) return false;
+        if (task_count >= MAX_TASKS) {
+            logger->log({logger::LogLevel::Error, std::format("Scheduler full (%d/%d tasks)!", task_count, MAX_TASKS)});
+            return false;
+        }
 
         tasks.push(std::move(task));
         ++task_count;

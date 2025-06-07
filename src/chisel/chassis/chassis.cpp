@@ -8,12 +8,12 @@ namespace chisel {
 
     Chassis::Chassis(DriveTrain&& drivetrain): scheduler(512), drivetrain(drivetrain) {
 
-        auto reg = [&](auto& motors, const char* prefix) {
-            for (int i = 0; i < motors.size(); ++i)
-                register_device({std::format("{}_{}", prefix, i + 1).c_str(), motors[i]});
-        };
-        reg(drivetrain.left_motors, "dt_left");
-        reg(drivetrain.right_motors, "dt_right");
+        // auto reg = [&](auto& motors, const char* prefix) {
+        //     for (int i = 0; i < motors.size(); ++i)
+        //         register_device({std::format("{}_{}", prefix, i + 1).c_str(), motors[i]});
+        // };
+        // reg(drivetrain.left_motor_group, "dt_left");
+        // reg(drivetrain.right_motor_group, "dt_right");
 
         static auto logger_device_context_pair = std::make_pair(&logger, &devices);
 

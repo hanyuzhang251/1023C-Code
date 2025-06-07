@@ -1,4 +1,4 @@
-#include "monitor.h"
+#include "../../../../include/chisel/chassis/monitor/monitor.h"
 
 namespace chisel::monitor {
 
