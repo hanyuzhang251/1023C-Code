@@ -1,17 +1,17 @@
-reset=false;
+reset=false
 clean=false
 upload=false
 
 while getopts "cur" opt; do
   case $opt in
+    r)
+      reset=true
+      ;;
     c)
       clean=true
       ;;
     u)
       upload=true
-      ;;
-    r)
-      reset=true
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2

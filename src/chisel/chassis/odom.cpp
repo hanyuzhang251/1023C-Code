@@ -1,126 +1,136 @@
-#include "odom.h"
-
-#include "../../../include/robot_config.h"
-#include <string>
-#include <vector>
+#include "../../../include/chisel/chassis/odom.h"
 
 namespace chisel {
 
-Pose solve_imu_bias(const pros::Imu& imu, const uint32_t timeout) {
-    Pose bias (0, 0, 0);
-    auto [bx, by, bh] = bias();
-
-    const uint32_t end = pros::millis() + timeout;
-
-    int ticks = 0;
-
-    printf("%sstart solving imu bias\n", prefix().c_str());
-
-    while (pros::millis() < end) {
-        bx.fetch_add(imu.get_accel().x);
-        by.fetch_add(imu.get_accel().y);
-
-        ++ticks;
-
-        wait(PROCESS_DELAY);
+    Odom::Odom(logger::Logger *logger, DriveTrain *drivetrain, pros::Imu *imu, 
+               pros::Rotation *ltw, pros::Rotation *rtw, pros::Rotation *stw,
+               const double sl, const double sr, const double ss, Pose &&pose_offset)
+        : logger(logger), drivetrain(drivetrain), imu(imu),
+          ltw(ltw), rtw(rtw), stw(stw),
+          sl(sl), sr(sr), ss(ss),
+          pose_offset(std::move(pose_offset)) {
     }
 
-    bx.store(bx.load() / ticks);
-    by.store(by.load() / ticks);
+    void Odom::reset() {
+        // reset the internal pose
+        i_pose = Pose{0, 0, 0};
+        pi_pose = Pose{0, 0, 0};
 
-    printf("%ssolved imu bias for %d ticks, result: bx=%f, by=%f\n", prefix().c_str(), ticks, bx.load(), by.load());
+        // resets the tracking wheel positions
+        if (ltw) ltw_reset = ltw->get_position();
+        if (rtw) rtw_reset = rtw->get_position();
+        if (stw) stw_reset = stw->get_position();
 
-    return {bx.load(), by.load(), bh.load()};
-}
-
-TrackingWheel::TrackingWheel(
-    pros::Rotation* rotation_sensor, const Pose& offset,
-    const float wheel_size)
-    : rotation_sensor(rotation_sensor), offset(offset),
-    wheel_size(wheel_size) {
-        printf("%screate new TrackingWheel: sensor(%d), offset=(%f, %f, %f), wheel_size=%f\n", prefix().c_str(), rotation_sensor->get_port(), offset.x.load(), offset.y.load(), offset.h.load(), wheel_size);
-    };
-
-Odom::Odom(
-    const Pose &pose,
-    const Pose &pose_offset,
-    pros::Imu* imu,
-    DriveTrain* drive_train,
-    TrackingWheel* tracking_wheel_list_ptr,
-    const int tracking_wheel_count,
-    const int MaxImuInitAttempts
-): pose(pose), pose_offset(pose_offset), imu(imu), drive_train(drive_train), MaxImuResetAttempts(MaxImuInitAttempts) {
-    tracking_wheel_list.reserve(tracking_wheel_count);
-    tracking_wheel_list.insert(tracking_wheel_list.end(),
-        tracking_wheel_list_ptr, tracking_wheel_list_ptr + tracking_wheel_count);
-
-    printf("%screate new Odom: ime=%s odom=%s\n", prefix().c_str(), (!drive_train) ? "yes" : "no", ((tracking_wheel_count > 0) ? std::to_string(tracking_wheel_count) : "no").c_str());
-}
-
-int32_t Odom::initialize_imu() {
-    if (!imu) {
-        printf("%snot using imu; skipping imu initialization\n", prefix().c_str());
-        return 0;
+        // resets the drivetrain motor encoder positions.
+        dtl_reset = drivetrain->left_motor_group->get_position();
+        dtr_reset = drivetrain->right_motor_group->get_position();
     }
 
-    printf("%sinitializing imu\n", prefix().c_str());
-    for (int i = 1; i <= MaxImuResetAttempts; ++i) {
-        if (imu->reset()) {
-            printf("%ssuccessfully reset imu on attempt %d\n", prefix().c_str(), i);
-            break;
+    void Odom::setPose(const Pose &pose) {
+        // sets the pose offset as if the robot was at the provided pose.
+        pose_offset = pose - i_pose;
+    }
+
+    double Odom::obtain_heading() {
+        double heading_rad = 0;
+
+        if (ltw && rtw) {
+            // if the left and right tracking wheels are provided, use them to calculate the heading.
+            heading_rad = ((ltw->get_position() - ltw_reset) - (rtw->get_position() - rtw_reset)) / (sl + sr);
+        } else if (imu) {
+            // if the IMU is provided, use it to calculate the heading.
+            heading_rad = imu->get_heading();
+        } else if (drivetrain) {
+            // if neither the vertical tracking wheels nor the IMU is provided, use the drivetrain motor encoders to calculate the heading instead.
+            heading_rad = ((drivetrain->left_motor_group->get_position() - dtl_reset)
+                          - (drivetrain->right_motor_group->get_position() - dtr_reset))
+                         / (drivetrain->track_width);
+        } else {
+            // if nothing is provided, log a critical error and return 0.
+            // if this happens, set crashout to abort the auton.
+            crashout = true;
+            logger->log({logger::LogLevel::Critical, "Odom cannot find the heading"});
         }
-        if (i == MaxImuResetAttempts) {
-            printf("%smu reset unsuccessful, continuing without imu\n", prefix().c_str());
-            return -1;
+
+        return heading_rad;
+    }
+
+    std::pair<double, double> Odom::obtain_local_xy(const double delta_theta) {
+        double local_x = 0, local_y = 0;
+
+        if (ltw || rtw) {
+            // If either the left or right tracking wheels are provided, use them to calculate the local coordinates.
+
+            // adapt values for tracking wheel selected
+            const double delta_tw = ltw ? ltw->get_position() - ltw_pp : rtw->get_position() - rtw_pp;
+            const double s_tw = ltw ? sl : sr;
+
+            // If the back tracking wheel is provided, use it to calculate local x. If not, local x will be 0;
+            const double delta_S = stw ? stw->get_position() - stw_pp : 0;
+
+            if (fabs(delta_theta) < 1e-6) {
+                // If the change in heading is insignificant, calculate as if movement is straight.
+                local_x = delta_S;
+                local_y = delta_tw;
+            } else {
+                // Otherwise, calculate the local coordinates using the chord formula.
+                const double chord_factor = 2 * sin(delta_theta / 2);
+                local_x = chord_factor * (delta_S / delta_theta + ss);
+                local_y = chord_factor * (delta_tw / delta_theta + s_tw);
+            }
+        } else if (drivetrain) {
+            // If neither the left or right tracking wheels are provided, use the drivetrain motor encoders to calculate the local coordinates instead.
+
+            const double delta_left = drivetrain->left_motor_group->get_position() - dtl_reset;
+            const double delta_right = drivetrain->right_motor_group->get_position() - dtr_reset;
+
+            const double left_distance = (delta_left * M_PI * drivetrain->wheel_size) / 
+                                      (drivetrain->gear_ratio * 360);
+            const double right_distance = (delta_right * M_PI * drivetrain->wheel_size) / 
+                                       (drivetrain->gear_ratio * 360);
+
+            if (fabs(delta_theta) < 1e-6) {
+                // If moving straight
+                local_x = (left_distance + right_distance) / 2;
+                local_y = 0;
+            } else {
+                // If not
+
+                const double radius = (drivetrain->track_width / 2) *
+                                    (left_distance + right_distance) / (left_distance - right_distance);
+
+                const double chord_factor = 2 * sin(delta_theta / 2);
+                local_x = radius * chord_factor;
+                local_y = 0;
+            }
+        } else {
+            // if nothing is provided, log a critical error and return 0.
+            // if this happens, set crashout to abort the auton.
+            crashout = true;
+            logger->log({logger::LogLevel::Critical, "Odom cannot track lateral movement"});
         }
-        printf("%smu reset unsuccessful, retrying...\n", prefix().c_str());
+
+        return {local_x, local_y};
     }
 
-    printf("%ssolving imu bias\n", prefix().c_str());
-    imu_bias = solve_imu_bias(*imu, 2000);
+    void Odom::track() {
+        const double new_heading_rad = obtain_heading();
+        const double delta_theta = new_heading_rad - (pi_pose.h * M_PI / 180);
 
-    printf("%simu initialization complete\n", prefix().c_str());
-    return 0;
-}
+        const auto [local_x, local_y] = obtain_local_xy(new_heading_rad);
 
-void Odom::initialize() {
-    printf("%sinitializing Odom\n", prefix().c_str());
+        const double avg_heading_rad = (pi_pose.h * M_PI / 180) + (delta_theta / 2);
 
-    if (initialize_imu() == -1) {
-        imu = nullptr;
+        const double global_x = local_x * cos(avg_heading_rad) - local_y * sin(avg_heading_rad);
+        const double global_y = local_x * sin(avg_heading_rad) + local_y * cos(avg_heading_rad);
+
+        i_pose.x += global_x;
+        i_pose.y += global_y;
+        i_pose.h = new_heading_rad * (180 / M_PI);
+
+        pi_pose = i_pose;
+        if (ltw) ltw_pp = ltw->get_position();
+        if (rtw) rtw_pp = rtw->get_position();
+        if (stw) stw_pp = stw->get_position();
     }
-
-    printf("%sOdom initialization complete\n", prefix().c_str());
 }
-
-
-void Odom::predict_with_ime() {
-    const double left_pos = drive_train->left_motors->get_position();
-    const double right_pos = drive_train->right_motors->get_position();
-
-    const double dist = ((left_pos - prev_left_pos) + (right_pos - prev_right_pos)) / 2 * drive_train->magic_number;
-
-    prev_left_pos = left_pos;
-    prev_right_pos = right_pos;
-
-    current_dist.fetch_add(dist);
-
-    auto [ipos_x, ipos_y, ipos_h] = ime_estimate();
-
-    const double h_rads = ipos_h * M_PI / 180;
-    ipos_x.fetch_add(std::cos(h_rads) * dist);
-    ipos_y.fetch_add(std::sin(h_rads) * dist);
-
-    ipos_h.store(imu->get_heading());
-}
-
-void Odom::push_prediction(bool consider_ime, bool consider_odom) {
-    // might do some stuff with filtering for noise but we lwky dont even have odom yet.
-    internal_pose = ime_estimate;
-}
-
-void Odom::load_pose() {
-    pose = Pose::add(internal_pose, pose_offset);
-}
-
-} // namespace chisel

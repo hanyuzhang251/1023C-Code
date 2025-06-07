@@ -1,46 +1,28 @@
 #pragma once
 
-#include "chisel/chassis/drive.h"
-#include "chisel/chassis/odom.h"
-#include "chisel/pid.h"
-#include "chisel/chassis/movement/movement.h"
+#include "main.h"
 
-#include <atomic>
-#include <queue>
+#include "odom.h"
+
+#include "chisel/logger/logger.h"
+#include "scheduler/scheduler.h"
+#include "chisel/data/device.h"
+#include "drivetrain.h"
+
+#include "monitor/monitor.h"
 
 namespace chisel {
+    class Chassis {
+    public:
+        logger::Logger logger = logger::Logger(64);
+        Scheduler scheduler;
 
-    /**
-     *
-     */
-    struct Chassis {
-        std::atomic<int> state = std::atomic(INIT_STATE);
+        DriveTrain drivetrain;
 
-        DriveTrain *drive_train;
-        DriveSettings *lateral_drive_settings;
-        DriveSettings *angular_drive_settings;
+        std::vector<DeviceMetadata> devices{};
 
-        Odom *odom;
+        void register_device(DeviceMetadata &&device);
 
-        PIDController *angular_pid_controller;
-        PIDController *lateral_pid_controller;
-
-        std::queue<Motion*> motion_queue;
-
-        std::atomic<bool> enabled;
-
-        void update();
-
-        Chassis(DriveTrain* drive_train, DriveSettings* lateral_drive_settings, DriveSettings* angular_drive_settings, Odom* odom, PIDController* angular_pid_controller, PIDController* lateral_pid_controller, bool enabled_ = false);
-
-        void initialize() const;
-
-        void assign_motion(Motion* motion);
-
-    private:
-        int clean_commands();
-
-        void update_motions() const;
+        Chassis(DriveTrain &&drivetrain);
     };
-
-} // namespace chisel
+}
