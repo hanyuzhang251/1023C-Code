@@ -28,7 +28,7 @@ float deg_to_point(const Pose& point) {
 }
 
 float dist_to_point(const Pose& point) {
-    return std::sqrt(point.x.load() * point.x.load() + point.y.load() + point.y.load());
+    return std::sqrt(point.x * point.x + point.y + point.y);
 }
 
 std::string format_millis(const uint32_t milliseconds) {

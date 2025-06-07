@@ -6,7 +6,7 @@ namespace chisel {
         devices.push_back(std::move(device));
     }
 
-    Chassis::Chassis(DriveTrain&& drivetrain): scheduler(512), drivetrain(drivetrain) {
+    Chassis::Chassis(DriveTrain&& drivetrain): scheduler(&logger, 512), drivetrain(drivetrain) {
 
         // auto reg = [&](auto& motors, const char* prefix) {
         //     for (int i = 0; i < motors.size(); ++i)
