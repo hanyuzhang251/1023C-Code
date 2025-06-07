@@ -14,7 +14,7 @@
 namespace chisel {
     class Chassis {
     public:
-        logger::Logger logger = logger::Logger(64);
+        logger::Logger* logger;
         Scheduler scheduler;
 
         DriveTrain drivetrain;
@@ -24,6 +24,6 @@ namespace chisel {
 
         void register_device(DeviceMetadata &&device);
 
-        explicit Chassis(DriveTrain &&drivetrain, Odom &&odom);
+        explicit Chassis(logger::Logger* logger, DriveTrain &&drivetrain, Odom &&odom);
     };
 }
