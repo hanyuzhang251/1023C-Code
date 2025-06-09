@@ -6,16 +6,16 @@ namespace chisel {
         std::vector<Task> container;
         container.reserve(MAX_TASKS);
 
-        tasks = std::priority_queue(std::less<Task>(), std::move(container));
+        tasks = std::priority_queue(std::less<>(), std::move(container));
     }
 
-    bool Scheduler::add_task(Task task) {
+    bool Scheduler::add_task(const Task &task) {
         if (task_count >= MAX_TASKS) {
             logger->log({logger::LogLevel::Error, std::format("Scheduler full (%d/%d tasks)!", task_count, MAX_TASKS)});
             return false;
         }
 
-        tasks.push(std::move(task));
+        tasks.push(task);
         ++task_count;
 
         return true;
@@ -33,7 +33,7 @@ namespace chisel {
 
             if (current.recurring) {
                 current.execute_time += current.interval;
-                add_task(std::move(current));
+                add_task(current);
             }
         }
     }

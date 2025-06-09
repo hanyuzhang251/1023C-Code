@@ -3,11 +3,12 @@
 namespace chisel {
 
     void Chassis::register_device(DeviceMetadata &&device) {
-        devices.push_back(std::move(device));
+        devices.push_back(device);
     }
 
     Chassis::Chassis(logger::Logger* logger, DriveTrain &&drivetrain, Odom &&odom):
         scheduler(logger, 512), logger(logger), drivetrain(drivetrain), odom(odom) {
+
 
         // auto reg = [&](auto& motors, const char* prefix) {
         //     for (int i = 0; i < motors.size(); ++i)

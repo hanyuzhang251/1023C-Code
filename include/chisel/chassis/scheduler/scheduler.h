@@ -14,13 +14,13 @@ namespace chisel {
         logger::Logger* logger;
 
         const uint16_t MAX_TASKS;
-        std::priority_queue<Task> tasks{};
+        std::priority_queue<Task, std::vector<Task>, std::less<>> tasks{};
         uint16_t task_count = 0;
 
     public:
         explicit Scheduler(logger::Logger* logger, uint16_t max_tasks);
 
-        bool add_task(Task task);
+        bool add_task(const Task &task);
 
         void update();
     };

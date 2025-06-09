@@ -8,7 +8,7 @@ namespace chisel {
         : logger(logger), drivetrain(drivetrain), imu(imu),
           ltw(ltw), rtw(rtw), stw(stw),
           sl(sl), sr(sr), ss(ss),
-          pose_offset(std::move(pose_offset)) {
+          pose_offset(pose_offset) {
     }
 
     void Odom::reset() {
