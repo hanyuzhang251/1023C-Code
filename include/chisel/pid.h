@@ -11,15 +11,15 @@ namespace chisel {
  * @brief Stores settings used in PID controllers
  */
 struct PIDSetting {
-    float kp;
-    float ki;
-    float kd;
-    float tolerance;
-    float wind;
-    float clamp;
-    float slew;
-    float small_error;
-    float large_error;
+    double kp;
+    double ki;
+    double kd;
+    double tolerance;
+    double wind;
+    double clamp;
+    double slew;
+    double small_error;
+    double large_error;
 
     /**
      * @brief PIDSetting constructor
@@ -31,21 +31,21 @@ struct PIDSetting {
      * @param tolerance Range of error considered acceptable
      * \n
      * @param wind Range of error to start accumulating integral.
-     *        if set to MAXFLOAT (default), integral will always accumulate
+     *        if set to MAXdouble (default), integral will always accumulate
      * @param clamp Absolute max of integral.
-     *        If set to MAXFLOAT (default), integral will not be clamped.
+     *        If set to MAXdouble (default), integral will not be clamped.
      * @param slew Absolute max rate of change of output.
-     *        If set to MAXFLOAT (default), output acceleration will not be affected.
+     *        If set to MAXdouble (default), output acceleration will not be affected.
      * \n
      * @param small_error While error approaches zero in this range, integral will lose influence to mitigate overshooting.
      *        If set to 0.0f (default), integral influence will not be affected.
      * @param large_error While absolute error approaches zero in this range, derivative will gain influence to increase the speed of long movements.
      *        Outside of this range derivative does not have any impact.
-     *        If set to MAXFLOAT (default), derivative influence will be present regardless of error.
+     *        If set to MAXdouble (default), derivative influence will be present regardless of error.
      */
     PIDSetting(
-        float kp, float ki, float kd, float tolerance, float wind = MAXFLOAT, float clamp = MAXFLOAT, float slew = MAXFLOAT,
-        float small_error = 0, float large_error = MAXFLOAT
+        double kp, double ki, double kd, double tolerance, double wind = MAXdouble, double clamp = MAXdouble, double slew = MAXdouble,
+        double small_error = 0, double large_error = MAXdouble
     );
 };
 
@@ -53,31 +53,31 @@ struct PIDSetting {
  * @brief PID controller, calculates an output based on the current value and target.
  *
  * Stores the PID settings and the current state of the controller.
- * Provided atomic<float> references are where the controller gets the current value and target, as well as storing the output.
+ * Provided atomic<double> references are where the controller gets the current value and target, as well as storing the output.
  * Additionally maintains min and max output variables, life of the controller, and an optional custom error calculation.
  */
 struct PIDController {
-    std::atomic<float>& value;
-    std::atomic<float>& target;
-    std::atomic<float>& output;
+    std::atomic<double>& value;
+    std::atomic<double>& target;
+    std::atomic<double>& output;
     const PIDSetting& pid;
-    float min_speed;
-    float max_speed;
+    double min_speed;
+    double max_speed;
     uint32_t life;
-    std::function<float(float, float)> normalize_err;
+    std::function<double(double, double)> normalize_err;
 
-    float prev_output = 0;
-    float prev_error = 0;
-    float error = 0;
-    float integral = 0;
-    float derivative = 0;
+    double prev_output = 0;
+    double prev_error = 0;
+    double error = 0;
+    double integral = 0;
+    double derivative = 0;
 
     /**
      * @brief PIDController constructor
      *
-     * @param value atomic<float> reference, where the controller gets the current value.
-     * @param target atomic<float> reference, where the controller gets the target value.
-     * @param output atomic<float> reference, where the controller stores the output.
+     * @param value atomic<double> reference, where the controller gets the current value.
+     * @param target atomic<double> reference, where the controller gets the target value.
+     * @param output atomic<double> reference, where the controller stores the output.
      * \n
      * @param pid Reference to settings used by the controller. The controller will not modify these settings.
      * @param max_speed Absolute max value of the output.
@@ -88,14 +88,14 @@ struct PIDController {
      *        The parameter name does not very well describe its purpose.
      */
     PIDController(
-        std::atomic<float>& value,
-        std::atomic<float>& target,
-        std::atomic<float>& output,
+        std::atomic<double>& value,
+        std::atomic<double>& target,
+        std::atomic<double>& output,
         const PIDSetting& pid,
-        float min_speed,
-        float max_speed,
+        double min_speed,
+        double max_speed,
         uint32_t life,
-        const std::function<float(float, float)>& normalize_err = nullptr);
+        const std::function<double(double, double)>& normalize_err = nullptr);
 
     /**
      * @return The error based on the current state of the controller.
@@ -104,7 +104,7 @@ struct PIDController {
      *       which depending on when the controller was last updated may not match the controller's error value.
      *       When wanting to get the controller's error value, directly access the variable [error]
      */
-    [[nodiscard]] float get_error() const;
+    [[nodiscard]] double get_error() const;
 
     /**
      * @return A structural binding of all variables.

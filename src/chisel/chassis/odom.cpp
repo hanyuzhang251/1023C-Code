@@ -4,11 +4,12 @@ namespace chisel {
 
     Odom::Odom(logger::Logger *logger, DriveTrain *drivetrain, pros::Imu *imu, 
                pros::Rotation *ltw, pros::Rotation *rtw, pros::Rotation *stw,
-               const double sl, const double sr, const double ss, Pose &&pose_offset)
+               const double sl, const double sr, const double ss, const Pose &pose_offset)
         : logger(logger), drivetrain(drivetrain), imu(imu),
           ltw(ltw), rtw(rtw), stw(stw),
           sl(sl), sr(sr), ss(ss),
           pose_offset(pose_offset) {
+        logger->log({logger::LogLevel::Info, std::format("New odom constructed. pose offset={%lf, %lf, %lf}, drivetrain=%c, imu=%c, left_tw=%c--sl=%lf, right_tw=%c--%lf, back_tw=%c--%lf", pose_offset.x, pose_offset.y, pose_offset.h, drivetrain ? 'Y' : 'n', imu ? 'Y' : 'n', ltw ? 'Y' : 'n', sl, rtw ? 'Y' : 'n', sr, stw ? 'Y' : 'n', ss)});
     }
 
     void Odom::reset() {
@@ -16,7 +17,7 @@ namespace chisel {
         i_pose = Pose{0, 0, 0};
         pi_pose = Pose{0, 0, 0};
 
-        // resets the tracking wheel positions
+        // resets the tracking-wheel positions
         if (ltw) ltw_reset = ltw->get_position();
         if (rtw) rtw_reset = rtw->get_position();
         if (stw) stw_reset = stw->get_position();

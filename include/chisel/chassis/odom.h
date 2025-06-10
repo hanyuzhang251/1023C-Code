@@ -51,7 +51,7 @@ namespace chisel {
          */
         Odom(logger::Logger *logger, DriveTrain *drivetrain, pros::Imu *imu, pros::Rotation *ltw, pros::Rotation *rtw,
              pros::Rotation *stw,
-             double sl, double sr, double ss, Pose &&pose_offset);
+             double sl, double sr, double ss, const Pose &pose_offset);
 
         void reset();
 
