@@ -42,17 +42,42 @@ constexpr double wheel_size = 3.25;
 constexpr double track_width = 15.5;
 constexpr double gear_ratio = 3 / 4;
 
+inline chisel::PIDController lateral_pid = {
+    1, // kp
+    2, // ki
+    3, // kp
+    4, // tolerance
+    5, // wind
+    6, // clamp
+    7, // decay
+    8, // small error
+    9 // large error
+};
+
+inline chisel::PIDController angular_pid = {
+    1, // kp
+    2, // ki
+    3, // kp
+    4, // tolerance
+    5, // wind
+    6, // clamp
+    7, // decay
+    8, // small error
+    9 // large error
+};
+
 // do NOT use this drivetrain object directly, use the chassis object instead
 inline chisel::DriveTrain drivetrain(
-        &dt_left_motors, &dt_right_motors,
-        wheel_size, track_width, gear_ratio);
+    &dt_left_motors, &dt_right_motors,
+    wheel_size, track_width, gear_ratio,
+    &lateral_pid, &angular_pid);
 
 // do NOT use this odom object directly, use the chassis object instead
 inline chisel::Odom odom(
-        &logger, &drivetrain, &imu,
-        &linear_odom, nullptr, nullptr,
-        linear_odom_offset, 0, 0,
-        {0, 0, 0});
+    &logger, &drivetrain, &imu,
+    &linear_odom, nullptr, nullptr,
+    linear_odom_offset, 0, 0,
+    {0, 0, 0});
 
 // Note: The chassis object moves the drivetrain and odom objects into its constructor.
 //      Because of this, the drivetrain and odom objects should only be used in the chassis object.

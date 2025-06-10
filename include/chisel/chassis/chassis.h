@@ -8,12 +8,17 @@
 #include "scheduler/scheduler.h"
 #include "chisel/data/device.h"
 #include "drivetrain.h"
+#include "../pid.h"
+#include "../util/util.h"
 
 #include "monitor/monitor.h"
 
 namespace chisel {
+
     class Chassis {
     public:
+        State gameState;
+
         logger::Logger* logger;
         Scheduler scheduler;
 

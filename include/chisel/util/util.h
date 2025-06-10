@@ -45,12 +45,20 @@ inline void wait(const uint32_t delta) {
 }
 
 namespace chisel {
+
+    enum class State {
+        INIT,
+        CRASHOUT,
+        AUTON,
+        DRIVE
+    };
+
     /**
      * @brief Finds the sign of the given value.
      *
      * @tparam T Type of the given value.
      * @param val given value to find the sign of.
-     * @return An int in  the range [-1, 1] describing the sign of the value.
+     * @return An int in the range [-1, 1] describing the sign of the value.
      *
      * @note Will reset in a compile time error if the type of the value does not support required operators.
      */
@@ -104,7 +112,7 @@ namespace chisel {
 
     /**
      * @brief Finds the error between a current and target degree.
-     *        The error is signed so order of parameters must be followed.
+     *        The error is signed, so the order of parameters must be followed.
      *
      * If the current degree was +45,0f and the target degree was +90,0f, the error would be +45.0f
      * On th eother hand if the target degree of 0.0f, the error would be -45.0f.
@@ -124,9 +132,9 @@ namespace chisel {
     float deg_to_point(const Pose &point);
 
     /**
-     * @brief Finds the distance to a give point using the Pythagreon theorom.
+     * @brief Finds the distance to a give point using the Pythagorean theorem.
      *
-     * The point is assumed to be relative, as in the function will not account for current robot position.
+     * The point is assumed to be relative, as in the function will not account for the current robot position.
      *
      * @param point
      * @return
@@ -134,8 +142,7 @@ namespace chisel {
     float dist_to_point(const Pose &point);
 
     /**
-     * @brief Formates a provided millisecond value to mm:ss:___
-     *        TODO find out what the millisecond sign thing is
+     * @brief Formates a provided millisecond value to mm:ss:SSS
      *
      * @param milliseconds Milliseconds to format.
      * @return Formated string as a std::string.
@@ -145,7 +152,7 @@ namespace chisel {
     /**
      * @brief Timestamp prefix for logs.
      *
-     * @return An std::string of length 15, containing the current timstamp in the format "[mm:ss:___]:   "
+     * @return An std::string of length 15, containing the current timstamp in the format "[mm:ss:SSS]:   "
      */
     std::string prefix();
 

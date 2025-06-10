@@ -1,15 +1,20 @@
 #include "../../../include/chisel/chassis/odom.h"
 
 namespace chisel {
-
-    Odom::Odom(logger::Logger *logger, DriveTrain *drivetrain, pros::Imu *imu, 
+    Odom::Odom(logger::Logger *logger, DriveTrain *drivetrain, pros::Imu *imu,
                pros::Rotation *ltw, pros::Rotation *rtw, pros::Rotation *stw,
                const double sl, const double sr, const double ss, const Pose &pose_offset)
         : logger(logger), drivetrain(drivetrain), imu(imu),
           ltw(ltw), rtw(rtw), stw(stw),
           sl(sl), sr(sr), ss(ss),
           pose_offset(pose_offset) {
-        logger->log({logger::LogLevel::Info, std::format("New odom constructed. pose offset={%lf, %lf, %lf}, drivetrain=%c, imu=%c, left_tw=%c--sl=%lf, right_tw=%c--%lf, back_tw=%c--%lf", pose_offset.x, pose_offset.y, pose_offset.h, drivetrain ? 'Y' : 'n', imu ? 'Y' : 'n', ltw ? 'Y' : 'n', sl, rtw ? 'Y' : 'n', sr, stw ? 'Y' : 'n', ss)});
+        logger->log({
+            logger::LogLevel::Info,
+            std::format(
+                "New odom constructed. pose offset={%lf, %lf, %lf}, drivetrain=%c, imu=%c, left_tw=%c--sl=%lf, right_tw=%c--%lf, back_tw=%c--%lf",
+                pose_offset.x, pose_offset.y, pose_offset.h, drivetrain ? 'Y' : 'n', imu ? 'Y' : 'n', ltw ? 'Y' : 'n',
+                sl, rtw ? 'Y' : 'n', sr, stw ? 'Y' : 'n', ss)
+        });
     }
 
     void Odom::reset() {
@@ -32,6 +37,13 @@ namespace chisel {
         pose_offset = pose - i_pose;
     }
 
+    inline double tw_to_inches(const double position) {
+        return position // tracking wheel rotation in centi degrees
+               / 100 // convert to degrees
+               / 360 // calculate the fraction of a full turn
+               * (2 * M_PI); // multiply by circumference of the tracking wheel (assuming 2" diameter)
+    }
+
     double Odom::obtain_heading() {
         double heading_rad = 0;
 
@@ -44,8 +56,8 @@ namespace chisel {
         } else if (drivetrain) {
             // if neither the vertical tracking wheels nor the IMU is provided, use the drivetrain motor encoders to calculate the heading instead.
             heading_rad = ((drivetrain->left_motor_group->get_position() - dtl_reset)
-                          - (drivetrain->right_motor_group->get_position() - dtr_reset))
-                         / (drivetrain->track_width);
+                           - (drivetrain->right_motor_group->get_position() - dtr_reset))
+                          / (drivetrain->track_width);
         } else {
             // if nothing is provided, log a critical error and return 0.
             // if this happens, set crashout to abort the auton.
@@ -63,11 +75,11 @@ namespace chisel {
             // If either the left or right tracking wheels are provided, use them to calculate the local coordinates.
 
             // adapt values for tracking wheel selected
-            const double delta_tw = ltw ? ltw->get_position() - ltw_pp : rtw->get_position() - rtw_pp;
+            const double delta_tw = tw_to_inches(ltw ? ltw->get_position() - ltw_pp : rtw->get_position() - rtw_pp);
             const double s_tw = ltw ? sl : sr;
 
             // If the back tracking wheel is provided, use it to calculate local x. If not, local x will be 0;
-            const double delta_S = stw ? stw->get_position() - stw_pp : 0;
+            const double delta_S = tw_to_inches(stw ? stw->get_position() - stw_pp : 0);
 
             if (fabs(delta_theta) < 1e-6) {
                 // If the change in heading is insignificant, calculate as if movement is straight.
@@ -81,25 +93,22 @@ namespace chisel {
             }
         } else if (drivetrain) {
             // If neither the left or right tracking wheels are provided, use the drivetrain motor encoders to calculate the local coordinates instead.
-
             const double delta_left = drivetrain->left_motor_group->get_position() - dtl_reset;
             const double delta_right = drivetrain->right_motor_group->get_position() - dtr_reset;
 
-            const double left_distance = (delta_left * M_PI * drivetrain->wheel_size) / 
-                                      (drivetrain->gear_ratio * 360);
-            const double right_distance = (delta_right * M_PI * drivetrain->wheel_size) / 
-                                       (drivetrain->gear_ratio * 360);
+            const double left_distance = (delta_left * M_PI * drivetrain->wheel_size) /
+                                         (drivetrain->gear_ratio * 360);
+            const double right_distance = (delta_right * M_PI * drivetrain->wheel_size) /
+                                          (drivetrain->gear_ratio * 360);
 
             if (fabs(delta_theta) < 1e-6) {
                 // If moving straight
                 local_x = (left_distance + right_distance) / 2;
                 local_y = 0;
             } else {
-                // If not
-
+                // If not, calculate the local coordinates using the chord formula.
                 const double radius = (drivetrain->track_width / 2) *
-                                    (left_distance + right_distance) / (left_distance - right_distance);
-
+                                      (left_distance + right_distance) / (left_distance - right_distance);
                 const double chord_factor = 2 * sin(delta_theta / 2);
                 local_x = radius * chord_factor;
                 local_y = 0;

@@ -2,6 +2,8 @@
 
 namespace chisel {
 
+
+
     void Chassis::register_device(DeviceMetadata &&device) {
         devices.push_back(device);
     }
