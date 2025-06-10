@@ -15,4 +15,7 @@ temp.log
 temp.errors
 *.ini
 .d/
-.idea/editor.xml
+
+# IDE
+.idea/
+.clang-format

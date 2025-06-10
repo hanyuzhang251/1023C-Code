@@ -2,11 +2,15 @@
 
 namespace chisel {
 
+
+
     void Chassis::register_device(DeviceMetadata &&device) {
-        devices.push_back(std::move(device));
+        devices.push_back(device);
     }
 
-    Chassis::Chassis(DriveTrain&& drivetrain): scheduler(512), drivetrain(drivetrain) {
+    Chassis::Chassis(logger::Logger* logger, DriveTrain &&drivetrain, Odom &&odom):
+        scheduler(logger, 512), logger(logger), drivetrain(drivetrain), odom(odom) {
+
 
         // auto reg = [&](auto& motors, const char* prefix) {
         //     for (int i = 0; i < motors.size(); ++i)
@@ -18,8 +22,8 @@ namespace chisel {
         static auto logger_device_context_pair = std::make_pair(&logger, &devices);
 
         scheduler.add_task(Task{
-            pros::millis() + 3000, Task::PRIORITY_HIGH - 1,
-            monitor::device_monitor_task_function, &logger_device_context_pair, 1000
+                pros::millis() + 3000, Task::PRIORITY_HIGH - 1,
+                monitor::device_monitor_task_function, &logger_device_context_pair, 1000
         });
     }
 }

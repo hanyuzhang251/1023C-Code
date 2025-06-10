@@ -2,121 +2,82 @@
 
 #include "util/util.h"
 
-#include <atomic>
 #include <functional>
+#include <cfloat>
 
 namespace chisel {
+    struct PIDController {
+        float kp;
+        float ki;
+        float kd;
+        float tolerance;
+        float wind;
+        float clamp;
+        float slew;
+        float small_error;
+        float large_error;
 
-/**
- * @brief Stores settings used in PID controllers
- */
-struct PIDSetting {
-    float kp;
-    float ki;
-    float kd;
-    float tolerance;
-    float wind;
-    float clamp;
-    float slew;
-    float small_error;
-    float large_error;
+        double error = 0;
+        double output = 0;
 
-    /**
-     * @brief PIDSetting constructor
-     *
-     * @param kp Proportional component, provides the majority of power for the system.
-     * @param ki Integral component, corrects for steady state error. Shouldn't be very high.
-     * @param kd Derivative component, dampens the proportional component.
-     * \n
-     * @param tolerance Range of error considered acceptable
-     * \n
-     * @param wind Range of error to start accumulating integral.
-     *        if set to MAXFLOAT (default), integral will always accumulate
-     * @param clamp Absolute max of integral.
-     *        If set to MAXFLOAT (default), integral will not be clamped.
-     * @param slew Absolute max rate of change of output.
-     *        If set to MAXFLOAT (default), output acceleration will not be affected.
-     * \n
-     * @param small_error While error approaches zero in this range, integral will lose influence to mitigate overshooting.
-     *        If set to 0.0f (default), integral influence will not be affected.
-     * @param large_error While absolute error approaches zero in this range, derivative will gain influence to increase the speed of long movements.
-     *        Outside of this range derivative does not have any impact.
-     *        If set to MAXFLOAT (default), derivative influence will be present regardless of error.
-     */
-    PIDSetting(
-        float kp, float ki, float kd, float tolerance, float wind = MAXFLOAT, float clamp = MAXFLOAT, float slew = MAXFLOAT,
-        float small_error = 0, float large_error = MAXFLOAT
-    );
-};
+        float prev_output = 0;
+        float prev_error = 0;
+        float integral = 0;
+        float derivative = 0;
 
-/**
- * @brief PID controller, calculates an output based on the current value and target.
- *
- * Stores the PID settings and the current state of the controller.
- * Provided atomic<float> references are where the controller gets the current value and target, as well as storing the output.
- * Additionally maintains min and max output variables, life of the controller, and an optional custom error calculation.
- */
-struct PIDController {
-    std::atomic<float>& value;
-    std::atomic<float>& target;
-    std::atomic<float>& output;
-    const PIDSetting& pid;
-    float min_speed;
-    float max_speed;
-    uint32_t life;
-    std::function<float(float, float)> normalize_err;
+        PIDController(const float kp, const float ki, const float kd, const float tolerance,
+                      const float wind, const float clamp, const float slew,
+                      const float small_error, const float large_error)
+            : kp(kp), ki(ki), kd(kd), tolerance(tolerance),
+              wind(wind), clamp(clamp), slew(slew),
+              small_error(small_error), large_error(large_error) {
+        }
 
-    float prev_output = 0;
-    float prev_error = 0;
-    float error = 0;
-    float integral = 0;
-    float derivative = 0;
+        void update() {
+            // Convert error to float. Point of this is to only convert in the controller.
+            const auto errorF = static_cast<float>(error);
 
-    /**
-     * @brief PIDController constructor
-     *
-     * @param value atomic<float> reference, where the controller gets the current value.
-     * @param target atomic<float> reference, where the controller gets the target value.
-     * @param output atomic<float> reference, where the controller stores the output.
-     * \n
-     * @param pid Reference to settings used by the controller. The controller will not modify these settings.
-     * @param max_speed Absolute max value of the output.
-     * @param min_speed Absolute min value of the output. Currently not in use.
-     * @param life Life of the controller in ticks.
-     * @param normalize_err Custom calculation for error provided the target and current values.
-     *        If set to nullptr (default), error will be calculated through [target_value] - [current value].
-     *        The parameter name does not very well describe its purpose.
-     */
-    PIDController(
-        std::atomic<float>& value,
-        std::atomic<float>& target,
-        std::atomic<float>& output,
-        const PIDSetting& pid,
-        float min_speed,
-        float max_speed,
-        uint32_t life,
-        const std::function<float(float, float)>& normalize_err = nullptr);
+            // Update prev values.
+            prev_error = errorF;
+            prev_output = static_cast<float>(output);
 
-    /**
-     * @return The error based on the current state of the controller.
-     *
-     * @note Calculats the error based on the state of the controller,
-     *       which depending on when the controller was last updated may not match the controller's error value.
-     *       When wanting to get the controller's error value, directly access the variable [error]
-     */
-    [[nodiscard]] float get_error() const;
+            // If we crossed the target, we should set the integral to zero.
+            if (sgn(prev_error) != sgn(error)) {
+                integral = 0;
+            }
 
-    /**
-     * @return A structural binding of all variables.
-     */
-    auto operator()();
-};
+            // If the integral is in the windup range, update integral.
+            if (std::abs(error) <= wind) {
+                integral += errorF;
+            }
+            // Otherwise, set integral to zero.
+            else {
+                integral = 0;
+            }
 
-/**
- * @brief Updates a provided PID controller.
- *
- * @param process Reference to the PID controller to update.
- */
-void pid_handle_process(PIDController& process);
+            // Clamp the integral.
+            integral = clamp(integral, -clamp, clamp);
 
+            // Update derivative
+            derivative = errorF - prev_error;
+
+            // Copy integral and derivative to avoid messing with originals.
+            float real_integral = integral;
+            float real_derivative = derivative;
+
+            // Integral *= [error=0.0 -> error=small_error : 0.3 -> 1.0]
+            real_integral *= std::min(1.0f, std::max(0.3f, std::abs(errorF) / small_error));
+            // Derivative *= [error=0.0 -> error=large_error : 1.0 -> 0.0]
+            real_derivative *= 1 - std::min(1.0f, std::abs(errorF) / large_error);
+
+            // Calculate power.
+            float calc_power = errorF * kp + real_integral * ki + real_derivative * kd;
+
+            // Clamp power to slew.
+            calc_power = clamp(calc_power, prev_output - slew, prev_output + slew);
+            // Clamp power to min/max speed
+
+            output = calc_power;
+        }
+    };
 } // namespace chisel

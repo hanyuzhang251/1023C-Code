@@ -51,7 +51,7 @@ namespace chisel {
          */
         Odom(logger::Logger *logger, DriveTrain *drivetrain, pros::Imu *imu, pros::Rotation *ltw, pros::Rotation *rtw,
              pros::Rotation *stw,
-             const double sl, const double sr, const double ss, Pose &&pose_offset);
+             double sl, double sr, double ss, const Pose &pose_offset);
 
         void reset();
 
@@ -67,7 +67,7 @@ namespace chisel {
          *
          * @return The heading of the robot in radians.
          */
-        [[nodiscard]] double obtain_heading() const;
+        [[nodiscard]] double obtain_heading();
 
         /**
          * @brief Gets the local x and y coordinates of the robot, given the change of heading in radians.
@@ -79,7 +79,7 @@ namespace chisel {
          * @param delta_theta change of heading in radians.
          * @return a pair of the local x and y change.
          */
-        [[nodiscard]] std::pair<double, double> obtain_local_xy(const double delta_theta) const;
+        [[nodiscard]] std::pair<double, double> obtain_local_xy(double delta_theta);
 
         void track();
     };

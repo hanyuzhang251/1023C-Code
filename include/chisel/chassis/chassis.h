@@ -8,21 +8,27 @@
 #include "scheduler/scheduler.h"
 #include "chisel/data/device.h"
 #include "drivetrain.h"
+#include "../pid.h"
+#include "../util/util.h"
 
 #include "monitor/monitor.h"
 
 namespace chisel {
+
     class Chassis {
     public:
-        logger::Logger logger = logger::Logger(64);
+        State gameState;
+
+        logger::Logger* logger;
         Scheduler scheduler;
 
         DriveTrain drivetrain;
+        Odom odom;
 
         std::vector<DeviceMetadata> devices{};
 
         void register_device(DeviceMetadata &&device);
 
-        Chassis(DriveTrain &&drivetrain);
+        explicit Chassis(logger::Logger* logger, DriveTrain &&drivetrain, Odom &&odom);
     };
 }

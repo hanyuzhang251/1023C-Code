@@ -20,13 +20,15 @@ namespace chisel {
         static constexpr uint8_t STATUS_BAKED = 6;
 
         static constexpr const char* STATUS_TEXT[] = {
-            "n/a",
-            "none",
-            "ok",
-            "ERROR",
-            "HOT",
-            "BURNT",
-            "BAKED"
+            "n/a", // undefined device
+            "none", // no device
+            "ok", // device is working correctly
+            "ERROR", // device is not working correctly
+
+            // MOTOR
+            "HOT", // motor is hot
+            "BURNT", // motor is burnt
+            "BAKED" // motor is very burnt
         };
 
         pros::v5::Device *device;
