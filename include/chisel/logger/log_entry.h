@@ -19,9 +19,9 @@ namespace chisel::logger {
      * The timestamp, if not explicitly set, will be set to the current time in milliseconds.
      */
     struct LogEntry {
-        LogLevel log_level;
+        LogLevel log_level = LogLevel::Info;
         std::string log;
-        uint32_t timestamp;
+        uint32_t timestamp{};
 
         /**
          * LogEntry constructor

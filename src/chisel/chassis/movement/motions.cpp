@@ -7,7 +7,7 @@ namespace chisel {
     }
 
     void TurnToHeading::update() {
-        const double error = deg_err(target_heading, curr_pose->h) * (params.revdir ? -1 : 1);
+        const double error = deg_err(target_heading, curr_pose->h) * (params.reverse ? -1 : 1);
 
         angular_exit.update(error);
 
@@ -22,7 +22,7 @@ namespace chisel {
     void TurnToPoint::update() {
         const Pose rel_target = Pose::sub(target_point, *curr_pose);
 
-        const double error = deg_err(deg_to_point(rel_target), curr_pose->h) * (params.revdir ? -1 : 1);
+        const double error = deg_err(deg_to_point(rel_target), curr_pose->h) * (params.reverse ? -1 : 1);
 
         angular_exit.update(error);
 
@@ -42,7 +42,7 @@ namespace chisel {
             crashout = true;
 
         double lat_error = dist_to_point(rel_target);
-        const double ang_error = deg_err(deg_to_point(rel_target), curr_pose->h) * (params.revdir ? -1 : 1);
+        const double ang_error = deg_err(deg_to_point(rel_target), curr_pose->h) * (params.reverse ? -1 : 1);
 
         lateral_exit.update(lat_error);
         angular_exit.update(ang_error);
@@ -50,7 +50,7 @@ namespace chisel {
         const double lat_mod = 1 - abs(ang_error) / 90;
         lat_error *= lat_mod;
 
-        controls.first = lat_error * (params.revdir ? -1 : 1);
+        controls.first = lat_error * (params.reverse ? -1 : 1);
         controls.second = ang_error;
     }
 }

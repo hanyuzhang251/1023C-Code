@@ -5,12 +5,16 @@
 #include "../../data/pose.h"
 #include "../../util/util.h"
 #include "../../../main.h"
+#include "chisel/chassis/odom.h"
+#include "chisel/logger/logger.h"
 
-namespace chisel {
+namespace chisel
+{
     /**
     * @brief Exit condition for motions.
     */
-    struct ExitCondition {
+    struct ExitCondition
+    {
         double range;
         uint32_t time;
 
@@ -46,7 +50,8 @@ namespace chisel {
         bool exit = false;
     };
 
-    struct MotionParams {
+    struct MotionParams
+    {
         double min_speed = 0;
         double max_speed = 127;
         uint32_t timeout = 5000;
@@ -57,15 +62,16 @@ namespace chisel {
         double angular_exit_range = 2;
         uint32_t angular_exit_time = 80;
 
-        bool revdir = false;
+        bool reverse = false;
     };
 
     /**
      * Abstract base motion class
      */
-    class Motion {
+    class Motion
+    {
     public:
-        Pose *curr_pose;
+        Pose* curr_pose;
 
         const MotionParams params;
 
@@ -85,7 +91,7 @@ namespace chisel {
          * @param pose Pointer to the current pose
          * @param params Parameters for the motion
          */
-        explicit Motion(Pose *pose, const MotionParams &params);
+        explicit Motion(Pose* pose, const MotionParams& params);
 
         /**
          * @brief Runs calculations for the motion
@@ -97,5 +103,16 @@ namespace chisel {
         virtual ~Motion() = default;
     };
 
-    static void movement_task_function(void *context);
+    struct MovementTaskContext {
+        logger::Logger* logger;
+
+        std::queue<Motion>* motion_queue;
+        Motion* current_motion;
+
+        Odom* odom;
+
+        MovementTaskContext(logger::Logger* logger, std::queue<Motion>* motion_queue, Motion* current_motion, Odom* odom);
+    };
+
+    static void movement_task_function(void* context);
 }

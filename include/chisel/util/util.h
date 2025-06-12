@@ -50,7 +50,8 @@ namespace chisel {
         INIT,
         CRASHOUT,
         AUTON,
-        DRIVE
+        DRIVE,
+        SHUTDOWN
     };
 
     /**

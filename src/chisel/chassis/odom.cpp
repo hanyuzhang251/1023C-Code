@@ -1,27 +1,30 @@
 #include "../../../include/chisel/chassis/odom.h"
 
-namespace chisel {
-    Odom::Odom(logger::Logger *logger, DriveTrain *drivetrain, pros::Imu *imu,
-               pros::Rotation *ltw, pros::Rotation *rtw, pros::Rotation *stw,
-               const double sl, const double sr, const double ss, const Pose &pose_offset) :
+namespace chisel
+{
+    Odom::Odom(logger::Logger* logger, DriveTrain* drivetrain, pros::Imu* imu,
+               pros::Rotation* ltw, pros::Rotation* rtw, pros::Rotation* stw,
+               const double sl, const double sr, const double ss, const Pose& pose_offset) :
         logger(logger), drivetrain(drivetrain), imu(imu),
         ltw(ltw), rtw(rtw), stw(stw),
         sl(sl), sr(sr), ss(ss),
-        pose_offset(pose_offset) {
-        logger->log(logger::LogEntry{
-                logger::LogLevel::Info,
-                std::format(
-                        "New odom constructed. pose offset={{:.2f}, {:.2f}, {:.2f}}, drivetrain={}, imu={}, "
-                        "left_tw={}--sl={:.2f}, right_tw={}--{:.2f}, back_tw={}--{:.2f}",
-                        pose_offset.x, pose_offset.y, pose_offset.h,
-                        drivetrain ? 'Y' : 'n', imu ? 'Y' : 'n', ltw ? 'Y' : 'n', sl,
-                        rtw ? 'Y' : 'n', sr, stw ? 'Y' : 'n', ss
-                        )
+        pose_offset(pose_offset)
+    {
+        logger->log({
+            logger::LogLevel::Info,
+            std::format(
+                "New odom constructed. pose offset=({:.2f}, {:.2f}, {:.2f}), drivetrain={}, imu={}, "
+                "left_tw={}--sl={:.2f}, right_tw={}--{:.2f}, back_tw={}--{:.2f}",
+                pose_offset.x, pose_offset.y, pose_offset.h,
+                drivetrain ? 'Y' : 'n', imu ? 'Y' : 'n', ltw ? 'Y' : 'n', sl,
+                rtw ? 'Y' : 'n', sr, stw ? 'Y' : 'n', ss
+            )
 
         });
     }
 
-    void Odom::reset() {
+    void Odom::reset()
+    {
         // reset the internal pose
         i_pose = Pose{0, 0, 0};
         pi_pose = Pose{0, 0, 0};
@@ -39,33 +42,43 @@ namespace chisel {
         dtr_reset = drivetrain->right_motor_group->get_position();
     }
 
-    void Odom::setPose(const Pose &pose) {
+    void Odom::setPose(const Pose& pose)
+    {
         // sets the pose offset as if the robot was at the provided pose.
         pose_offset = pose - i_pose;
     }
 
-    inline double tw_to_inches(const double position) {
+    inline double tw_to_inches(const double position)
+    {
         return position // tracking wheel rotation in centi degrees
-               / 100 // convert to degrees
-               / 360 // calculate the fraction of a full turn
-               * (2 * M_PI); // multiply by circumference of the tracking wheel (assuming 2" diameter)
+            / 100 // convert to degrees
+            / 360 // calculate the fraction of a full turn
+            * (2 * M_PI); // multiply by circumference of the tracking wheel (assuming 2" diameter)
     }
 
-    double Odom::obtain_heading() {
+    double Odom::obtain_heading()
+    {
         double heading_rad = 0;
 
-        if (ltw && rtw) {
+        if (ltw && rtw)
+        {
             // if the left and right tracking wheels are provided, use them to calculate the heading.
             heading_rad = ((ltw->get_position() - ltw_reset) - (rtw->get_position() - rtw_reset)) / (sl + sr);
-        } else if (imu) {
+        }
+        else if (imu)
+        {
             // if the IMU is provided, use it to calculate the heading.
             heading_rad = imu->get_heading();
-        } else if (drivetrain) {
+        }
+        else if (drivetrain)
+        {
             // if neither the vertical tracking wheels nor the IMU is provided, use the drivetrain motor encoders to calculate the heading instead.
             heading_rad = ((drivetrain->left_motor_group->get_position() - dtl_reset)
-                           - (drivetrain->right_motor_group->get_position() - dtr_reset))
-                          / (drivetrain->track_width);
-        } else {
+                    - (drivetrain->right_motor_group->get_position() - dtr_reset))
+                / (drivetrain->track_width);
+        }
+        else
+        {
             // if nothing is provided, log a critical error and return 0.
             // if this happens, set crashout to abort the auton.
             crashout = true;
@@ -75,10 +88,12 @@ namespace chisel {
         return heading_rad;
     }
 
-    std::pair<double, double> Odom::obtain_local_xy(const double delta_theta) {
+    std::pair<double, double> Odom::obtain_local_xy(const double delta_theta)
+    {
         double local_x = 0, local_y = 0;
 
-        if (ltw || rtw) {
+        if (ltw || rtw)
+        {
             // If either the left or right tracking wheels are provided, use them to calculate the local coordinates.
 
             // adapt values for tracking wheel selected
@@ -88,39 +103,49 @@ namespace chisel {
             // If the back tracking wheel is provided, use it to calculate local x. If not, local x will be 0;
             const double delta_S = tw_to_inches(stw ? stw->get_position() - stw_pp : 0);
 
-            if (fabs(delta_theta) < 1e-6) {
+            if (fabs(delta_theta) < 1e-6)
+            {
                 // If the change in heading is insignificant, calculate as if movement is straight.
                 local_x = delta_S;
                 local_y = delta_tw;
-            } else {
+            }
+            else
+            {
                 // Otherwise, calculate the local coordinates using the chord formula.
                 const double chord_factor = 2 * sin(delta_theta / 2);
                 local_x = chord_factor * (delta_S / delta_theta + ss);
                 local_y = chord_factor * (delta_tw / delta_theta + s_tw);
             }
-        } else if (drivetrain) {
+        }
+        else if (drivetrain)
+        {
             // If neither the left or right tracking wheels are provided, use the drivetrain motor encoders to calculate the local coordinates instead.
             const double delta_left = drivetrain->left_motor_group->get_position() - dtl_reset;
             const double delta_right = drivetrain->right_motor_group->get_position() - dtr_reset;
 
             const double left_distance = (delta_left * M_PI * drivetrain->wheel_size) /
-                                         (drivetrain->gear_ratio * 360);
+                (drivetrain->gear_ratio * 360);
             const double right_distance = (delta_right * M_PI * drivetrain->wheel_size) /
-                                          (drivetrain->gear_ratio * 360);
+                (drivetrain->gear_ratio * 360);
 
-            if (fabs(delta_theta) < 1e-6) {
+            if (fabs(delta_theta) < 1e-6)
+            {
                 // If moving straight
                 local_x = (left_distance + right_distance) / 2;
                 local_y = 0;
-            } else {
+            }
+            else
+            {
                 // If not, calculate the local coordinates using the chord formula.
                 const double radius = (drivetrain->track_width / 2) *
-                                      (left_distance + right_distance) / (left_distance - right_distance);
+                    (left_distance + right_distance) / (left_distance - right_distance);
                 const double chord_factor = 2 * sin(delta_theta / 2);
                 local_x = radius * chord_factor;
                 local_y = 0;
             }
-        } else {
+        }
+        else
+        {
             // if nothing is provided, log a critical error and return 0.
             // if this happens, set crashout to abort the auton.
             crashout = true;
@@ -130,7 +155,8 @@ namespace chisel {
         return {local_x, local_y};
     }
 
-    void Odom::track() {
+    void Odom::track()
+    {
         const double new_heading_rad = obtain_heading();
         const double delta_theta = new_heading_rad - (pi_pose.h * M_PI / 180);
 

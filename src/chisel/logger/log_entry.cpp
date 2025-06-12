@@ -1,4 +1,4 @@
-#include "log_entry.h"
+#include "../../../include/chisel/logger/log_entry.h"
 
 #include <utility>
 

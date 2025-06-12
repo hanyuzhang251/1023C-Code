@@ -29,7 +29,7 @@ namespace chisel {
         std::vector<DeviceMetadata> devices{};
 
         std::queue<Motion> motion_queue{};
-        Motion *current_motion = nullptr;
+        Motion* current_motion = nullptr;
 
         void register_device(DeviceMetadata &&device);
 

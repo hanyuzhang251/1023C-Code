@@ -1,4 +1,4 @@
-#include "chassis.h"
+#include "../include/chisel/chassis/chassis.h"
 
 #include "chisel/config.h"
 
@@ -26,14 +26,14 @@ namespace chisel {
                 monitor::device_monitor_task_function, &logger_device_context_pair, 1000
         });
 
-        // static auto movement_task_context_struct = /*custom context struct here*/;
-        // scheduler.add_task(Task{
-        //     pros::millis() + 1000, Task::PRIORITY_HIGH,
-        //     movement_task_function, &movement_task_context_struct, PROCESS_DELAY
-        // });
+        static auto movement_task_context_struct = MovementTaskContext{logger, &motion_queue, current_motion, &odom};
+        scheduler.add_task(Task{
+            pros::millis() + 1000, Task::PRIORITY_HIGH,
+            movement_task_function, &movement_task_context_struct, PROCESS_DELAY
+        });
 
         pros::Task([&] {
-            while (true) {
+            while (gameState != State::SHUTDOWN) {
                 scheduler.update();
 
                 pros::delay(PROCESS_DELAY);
