@@ -84,6 +84,22 @@ namespace chisel {
     }
 
     /**
+     * @brief Clamps a given value to a given range.
+     *
+     * @tparam T Type of the given value.
+     * @param value Value to clamp.
+     * @param min Min value.
+     * @param max Max value.
+     * @return The clamped value.
+     */
+    template<typename T>
+    T clamp_(T value, T min, T max) {
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
+    }
+
+    /**
      * @brief Clamps the given value to a given absolute range.
      *
      * If the range was [+20, +50], the value would be clamped to the ranges [-50, -20] and [+20, +50], based on the sign.
@@ -108,7 +124,7 @@ namespace chisel {
      * @param degree Degree to normalize.
      * @return The normalized degree.
      */
-    float deg_norm(float degree);
+    double deg_norm(double degree);
 
     /**
      * @brief Finds the error between a current and target degree.
@@ -121,7 +137,7 @@ namespace chisel {
      * @param target Target degree.
      * @return Degree error, normalized to the range [-180.0f, +180.0f]
      */
-    float deg_err(float current, float target);
+    double deg_err(double current, double target);
 
     /**
      * @brief Finds the degree to a given point with the atan2 function.
@@ -129,7 +145,7 @@ namespace chisel {
      * @param point Reference to the point. Stored in a Pose object though its heading is ignored.
      * @return The degree to the point.
      */
-    float deg_to_point(const Pose &point);
+    double deg_to_point(const Pose &point);
 
     /**
      * @brief Finds the distance to a give point using the Pythagorean theorem.
@@ -139,7 +155,7 @@ namespace chisel {
      * @param point
      * @return
      */
-    float dist_to_point(const Pose &point);
+    double dist_to_point(const Pose &point);
 
     /**
      * @brief Formates a provided millisecond value to mm:ss:SSS

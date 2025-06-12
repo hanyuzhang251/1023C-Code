@@ -1,3 +1,9 @@
+pr() {
+  local char="$1"
+  local count="$2"
+  printf "%${count}s" "" | tr ' ' "$char"
+}
+
 reset=false
 clean=false
 upload=false
@@ -32,7 +38,14 @@ if $clean; then
 fi
 
 time make -j$(($(sysctl -n hw.ncpu) + 1))
-echo "compiled on $(date '+%Y-%m-%d %H:%M:%S')"
+if [ $? -ne 0 ]; then
+    printf "\n\e[41m ┏%s┓ \e[0m\n\e[41m ┃%s┃ \e[0m\n\e[41m ┃%s\e[1;37m!! MAKE FAILED !!\e[0;37m\e[41m%s┃ \e[0m\n\e[41m ┃%s┃ \e[0m\n\e[41m ┗%s┛ \e[0m" \
+    "$(pr '━' 76)" "$(pr ' ' 76)" "$(pr ' ' 29)" "$(pr ' ' 30)" "$(pr ' ' 76)" "$(pr '━' 76)"
+
+    upload=false
+else
+    echo "compiled on $(date '+%Y-%m-%d %H:%M:%S')"
+fi
 
 if $upload; then
   pros u

@@ -3,7 +3,7 @@
 
 namespace chisel {
 
-float deg_norm(float degree) {
+double deg_norm(double degree) {
     degree = std::fmod(degree, 360.0f);
 
     if (degree >= 180.0f) {
@@ -15,19 +15,19 @@ float deg_norm(float degree) {
     return degree;
 }
 
-float deg_err(const float current, const float target) {
-    float diff = std::fmod(current - target + 180.0f, 360.0f);
+double deg_err(const double current, const double target) {
+    double diff = std::fmod(current - target + 180.0f, 360.0f);
     
     if (diff < 0.0f) diff += 360.0f;
 
     return diff - 180.0f;
 }
 
-float deg_to_point(const Pose& point) {
+double deg_to_point(const Pose& point) {
     return deg_norm(std::atan2(point.x, point.y) * 180 / M_PI + 90);
 }
 
-float dist_to_point(const Pose& point) {
+double dist_to_point(const Pose& point) {
     return std::sqrt(point.x * point.x + point.y + point.y);
 }
 

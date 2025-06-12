@@ -8,6 +8,7 @@
 #include "scheduler/scheduler.h"
 #include "chisel/data/device.h"
 #include "drivetrain.h"
+#include "movement/movement.h"
 #include "../pid.h"
 #include "../util/util.h"
 
@@ -17,7 +18,7 @@ namespace chisel {
 
     class Chassis {
     public:
-        State gameState;
+        State gameState = State::INIT;
 
         logger::Logger* logger;
         Scheduler scheduler;
@@ -26,6 +27,9 @@ namespace chisel {
         Odom odom;
 
         std::vector<DeviceMetadata> devices{};
+
+        std::queue<Motion> motion_queue{};
+        Motion *current_motion = nullptr;
 
         void register_device(DeviceMetadata &&device);
 
