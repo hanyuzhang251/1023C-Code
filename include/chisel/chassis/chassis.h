@@ -9,6 +9,7 @@
 #include "chisel/data/device.h"
 #include "drivetrain.h"
 #include "movement/movement.h"
+#include "movement/controller.h"
 #include "../pid.h"
 #include "../util/util.h"
 

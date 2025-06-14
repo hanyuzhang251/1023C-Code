@@ -8,5 +8,6 @@ include_directories(include)
 
 file(GLOB_RECURSE SOURCES "src/*.[cS]" "src/*.cpp")
 
-add_executable(dummy_target ${SOURCES})
+add_executable(dummy_target ${SOURCES}
+        include/chisel/chassis/movement/controller.h)
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cfloat>
+#include <queue>
 
 #include "../../data/pose.h"
 #include "../../util/util.h"
@@ -13,7 +14,7 @@ namespace chisel
     /**
     * @brief Exit condition for motions.
     */
-    struct ExitCondition
+    struct ExitCondition final
     {
         double range;
         uint32_t time;
@@ -21,8 +22,8 @@ namespace chisel
         /**
          * @brief Exit condition constructor.
          *
-         * @param range Absolute range of error to exit.
-         * @param time Milliseconds error has to be in the range to exit.
+         * @param range Absolute range of error to exit. Set to -67 if this exit condition should always return true
+         * @param time Milliseconds that error has to be in the range to exit.
          */
         ExitCondition(double range, uint32_t time);
 
@@ -42,8 +43,6 @@ namespace chisel
          * @brief Resets the exit condition
          */
         void reset();
-
-        virtual ~ExitCondition() = default;
 
     private:
         uint32_t start_time = UINT32_MAX;
@@ -113,6 +112,4 @@ namespace chisel
 
         MovementTaskContext(logger::Logger* logger, std::queue<Motion>* motion_queue, Motion* current_motion, Odom* odom);
     };
-
-    static void movement_task_function(void* context);
 }
