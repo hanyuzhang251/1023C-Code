@@ -40,7 +40,7 @@ inline auto logger = chisel::logger::Logger(64);
 
 constexpr double wheel_size = 3.25;
 constexpr double track_width = 15.5;
-constexpr double gear_ratio = 3 / 4;
+constexpr double gear_ratio = 3.0 / 4;
 
 inline chisel::PIDController lateral_pid = {
     1, // kp
@@ -79,6 +79,23 @@ inline chisel::Odom odom(
     linear_odom_offset, 0, 0,
     {0, 0, 0});
 
-// Note: The chassis object moves the drivetrain and odom objects into its constructor.
-//      Because of this, the drivetrain and odom objects should only be used in the chassis object.
+/**
+ * @brief Global Chassis object. Represents the robot chassis.
+ *
+ * Contains the scheduler, drivetrain, and odometry. Logger is provided as a
+ * pointer. As drivetrain and odometry are moved into the chassis, the global
+ * instance of these objects should no longer be used.
+ *
+ * @note Clang-Tidy may suggest that \code std::move()\endcode is not needed when passing
+ *       the drivetrain and odom to the chassis, but this is incorrect.
+ */
 inline chisel::Chassis chassis(&logger, std::move(drivetrain), std::move(odom));
+
+/*****************************************************************************/
+/*                                    Init                                   */
+/*****************************************************************************/
+
+void device_init()
+{
+
+}
