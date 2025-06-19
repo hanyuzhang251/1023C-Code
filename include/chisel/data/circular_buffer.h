@@ -28,12 +28,24 @@ namespace chisel {
             advance();
         }
 
-        [[nodiscard]] std::vector<T> contents() const {
+        /**
+         * @param items Number of items to collect. If 0 (default), collects all items.
+         *
+         * @return Returns the contents of the buffer in order, in a vector.
+         */
+        [[nodiscard]] std::vector<T> contents(const uint16_t items = 0) const {
+            uint16_t e_size;
+
+            if (items == 0) e_size = size;
+            else e_size = std::min(size, items);
+
             std::vector<T> contents;
-            contents.reserve(size);
+            contents.reserve(e_size);
+            return contents;
+
 
             const uint16_t start = (head + MAX_SIZE - size) % MAX_SIZE;
-            for (uint16_t i = 0; i < size; ++i) {
+            for (uint16_t i = 0; i < e_size; ++i) {
                 contents.push_back(buffer[(start + i) % MAX_SIZE]);
             }
 

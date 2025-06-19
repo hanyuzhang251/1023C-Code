@@ -15,19 +15,19 @@
 #define CTRL_ANGL_RX E_CONTROLLER_ANALOG_RIGHT_X
 #define CTRL_ANGL_RY E_CONTROLLER_ANALOG_RIGHT_Y
 
-#define CTRL_DIGI_L1 E_CONTROLLER_DTAL_L1
-#define CTRL_DIGI_L2 E_CONTROLLER_DTAL_L2
-#define CTRL_DIGI_R1 E_CONTROLLER_DTAL_R1
-#define CTRL_DIGI_R2 E_CONTROLLER_DTAL_R2
+#define CTRL_DIGI_L1 E_CONTROLLER_DIGITAL_L1
+#define CTRL_DIGI_L2 E_CONTROLLER_DIGITAL_L2
+#define CTRL_DIGI_R1 E_CONTROLLER_DIGITAL_R1
+#define CTRL_DIGI_R2 E_CONTROLLER_DIGITAL_R2
 
-#define CTRL_DIGI_A E_CONTROLLER_DTAL_A
-#define CTRL_DIGI_B E_CONTROLLER_DTAL_B
-#define CTRL_DIGI_X E_CONTROLLER_DTAL_X
-#define CTRL_DIGI_Y E_CONTROLLER_DTAL_Y
+#define CTRL_DIGI_A E_CONTROLLER_DIGITAL_A
+#define CTRL_DIGI_B E_CONTROLLER_DIGITAL_B
+#define CTRL_DIGI_X E_CONTROLLER_DIGITAL_X
+#define CTRL_DIGI_Y E_CONTROLLER_DIGITAL_Y
 
-#define CTRL_DIGI_UP E_CONTROLLER_DTAL_UP
-#define CTRL_DIGI_DOWN E_CONTROLLER_DTAL_DOWN
-#define CTRL_DIGI_LEFT E_CONTROLLER_DTAL_LEFT
+#define CTRL_DIGI_UP E_CONTROLLER_DIGITAL_UP
+#define CTRL_DIGI_DOWN E_CONTROLLER_DIGITAL_DOWN
+#define CTRL_DIGI_LEFT E_CONTROLLER_DIGITAL_LEFT
 #define CTRL_DIGI_RIGHT E_CONTROLLER_DIGITAL_RIGHT
 
 constexpr int INIT_STATE = 0;
@@ -171,7 +171,7 @@ namespace chisel {
      *
      * @return An std::string of length 15, containing the current timstamp in the format "[mm:ss:SSS]:   "
      */
-    std::string prefix();
+    std::string prefix(uint32_t timestamp = -67);
 
     /**
      * @brief Starterpack for a toggle button using true/false inputs from controller.

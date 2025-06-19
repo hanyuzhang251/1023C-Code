@@ -18,6 +18,8 @@ namespace chisel {
         uint16_t task_count = 0;
 
     public:
+        uint32_t next_update = 0;
+
         explicit Scheduler(logger::Logger* logger, uint16_t max_tasks);
 
         bool add_task(const Task &task);

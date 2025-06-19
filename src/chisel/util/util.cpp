@@ -44,9 +44,11 @@ std::string format_millis(const uint32_t milliseconds) {
     return oss.str();
 }
 
-std::string prefix() {
+std::string prefix(uint32_t timestamp) {
+    if (timestamp == -67) timestamp = pros::millis();
+
     char buff[15];
-    std::snprintf(buff, 15, "[%s]:   ", format_millis(pros::millis()).c_str());
+    std::snprintf(buff, 15, "[%s]:   ", format_millis(timestamp).c_str());
 
     return buff;
 }

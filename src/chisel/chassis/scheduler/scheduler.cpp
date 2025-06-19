@@ -1,4 +1,4 @@
-#include "scheduler.h"
+#include "chisel/chassis/scheduler/scheduler.h"
 
 #include "chisel/config.h"
 
@@ -25,15 +25,18 @@ namespace chisel {
     }
 
     void Scheduler::update() {
-        if (tasks.empty()) return;
+        uint32_t update_start_time = pros::millis();
 
-        uint32_t time = pros::millis();
+        if (tasks.empty()) {
+            next_update = update_start_time + PROCESS_DELAY;
+            return;
+        }
 
         std::vector<Task> tasks_to_run;
         tasks_to_run.reserve(8);
 
         uint16_t n_tasks = 0;
-        while (tasks.top().execute_time <= time) {
+        while (tasks.top().execute_time <= update_start_time) {
             tasks_to_run.push_back(tasks.top());
             tasks.pop();
             --task_count;
@@ -44,10 +47,10 @@ namespace chisel {
             logger->log({logger::LogLevel::Warn, "Scheduler is running %d tasks this update.", n_tasks});
         }
 
-        std::ranges::sort(tasks_to_run, [time](const Task &a, const Task &b) {
-            const auto scale_priority = [time](const Task &task) {
+        std::ranges::sort(tasks_to_run, [update_start_time](const Task &a, const Task &b) {
+            const auto scale_priority = [update_start_time](const Task &task) {
                 const uint32_t priority_band = task.priority << (task.priority >= Task::PRIORITY_HIGH ? 2 : 1);
-                const uint32_t overdue_bonus = (time - task.execute_time) / PROCESS_DELAY;
+                const uint32_t overdue_bonus = (update_start_time - task.execute_time) / PROCESS_DELAY;
 
                 return priority_band + overdue_bonus;
             };
@@ -61,12 +64,11 @@ namespace chisel {
             if (current.recurring) {
                 current.execute_time += current.interval;
 
-                if (current.interval < PROCESS_DELAY) {
-                    logger->log({logger::LogLevel::Warn, "Recurring task with interval less than the process delay!",});
-                }
-
                 add_task(current);
             }
         }
+
+        const Task* next_task = &tasks.top();
+        next_update = std::min(next_update, next_task->execute_time);
     }
 }

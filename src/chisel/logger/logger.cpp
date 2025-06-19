@@ -12,6 +12,7 @@ namespace chisel::logger {
         if (sink_count >= MAX_SINKS)
             return false;
         targets[sink_count++] = sink;
+        sink->set_parent(this);
         return true;
     }
 

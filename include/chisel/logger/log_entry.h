@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include "main.h"
 
 namespace chisel::logger {
     enum class LogLevel {
@@ -11,6 +12,16 @@ namespace chisel::logger {
         Error,
         Critical
     };
+
+    static pros::Color log_level_to_color(const LogLevel& log_level) {
+        if (log_level == LogLevel::Debug) return pros::Color::gray;
+        if (log_level == LogLevel::Info) return pros::Color::white;
+        if (log_level == LogLevel::Warn) return pros::Color::yellow;
+        if (log_level == LogLevel::Error) return pros::Color::red;
+        if (log_level == LogLevel::Critical) return pros::Color::red;
+
+        return pros::Color::white;
+    }
 
     /**
      * Represents a single log entry within the logging system.
@@ -34,5 +45,4 @@ namespace chisel::logger {
 
         LogEntry() = default;
     };
-
 }

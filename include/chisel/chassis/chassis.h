@@ -15,11 +15,12 @@
 
 #include "monitor/monitor.h"
 
-namespace chisel {
-
-    class Chassis {
+namespace chisel
+{
+    class Chassis
+    {
     public:
-        State gameState = State::INIT;
+        State state = State::INIT;
 
         logger::Logger* logger;
         Scheduler scheduler;
@@ -32,8 +33,8 @@ namespace chisel {
         std::queue<Motion> motion_queue{};
         Motion* current_motion = nullptr;
 
-        void register_device(DeviceMetadata &&device);
+        void register_device(DeviceMetadata&& device);
 
-        explicit Chassis(logger::Logger* logger, DriveTrain &&drivetrain, Odom &&odom);
+        explicit Chassis(logger::Logger* logger, DriveTrain&& drivetrain, Odom&& odom);
     };
 }

@@ -3,6 +3,9 @@
 #include "log_entry.h"
 
 namespace chisel::logger {
+    // Forward declaration to logger, as logger already includes this header.
+    class Logger;
+
     /**
      * @class Sink
      * @brief Abstract base class representing a sink for logging.
@@ -14,7 +17,8 @@ namespace chisel::logger {
      */
     class Sink {
     public:
-        virtual void send_log(const LogEntry &log) = 0;
+        virtual void set_parent(Logger* logger) = 0;
+        virtual void send_log(const LogEntry& log) = 0;
         virtual ~Sink() = default;
     };
 
@@ -30,6 +34,9 @@ namespace chisel::logger {
     class FunctionSink final : public Sink {
         using LogFunction = void (*)(const LogEntry&);
         LogFunction callback;
+
+        Logger* parent = nullptr;
+
     public:
         /**
          * FunctionSink constructor
@@ -45,9 +52,14 @@ namespace chisel::logger {
          *
          * @param fn Function pointer to the callback function.
          */
-        explicit FunctionSink(const LogFunction fn) : callback(fn) {}
-        
-        void send_log(const LogEntry &log) override {
+        explicit FunctionSink(const LogFunction fn) : callback(fn) {
+        }
+
+        void set_parent(Logger* logger) override {
+            parent = logger;
+        }
+
+        void send_log(const LogEntry& log) override {
             if (callback) callback(log);
         }
     };
