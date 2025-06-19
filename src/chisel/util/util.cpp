@@ -53,6 +53,11 @@ std::string prefix(uint32_t timestamp) {
     return buff;
 }
 
+Toggle::Toggle(const bool value_) : value(value_), ptrigger(false) {}
 
+void Toggle::tick(const bool trigger) {
+    if (trigger && !ptrigger) value = !value;
+    ptrigger = trigger;
+}
 
 } // namespace chisel
