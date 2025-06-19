@@ -171,6 +171,8 @@ namespace chisel
         i_pose.y += global_y;
         i_pose.h = new_heading_rad * (180 / M_PI);
 
+        pose = pose_offset + i_pose;
+
         pi_pose = i_pose;
         if (ltw)
             ltw_pp = ltw->get_position();

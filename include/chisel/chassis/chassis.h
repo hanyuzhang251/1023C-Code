@@ -20,7 +20,7 @@ namespace chisel
     class Chassis
     {
     public:
-        State state = State::INIT;
+        State state = State::Init;
 
         logger::Logger* logger;
         Scheduler scheduler;

@@ -53,7 +53,7 @@ constexpr int32_t INTAKE_SPEED = 127;
 /*                                  Devices                                  */
 /*****************************************************************************/
 
-inline pros::Controller master(pros::E_CONTROLLER_MASTER);
+// controller is defined in chisel/config.h
 
 inline pros::MotorGroup dt_left_motors = {dt_fl_motor_port, dt_ml_motor_port, dt_bl_motor_port};
 inline pros::MotorGroup dt_right_motors = {dt_fr_motor_port, dt_mr_motor_port, dt_br_motor_port};
