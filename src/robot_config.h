@@ -187,8 +187,14 @@ inline chisel::Chassis chassis(&logger, std::move(drivetrain), std::move(odom));
 /*                                    Init                                   */
 /*****************************************************************************/
 
-void device_init() {
+inline void device_init() {
     // logger.add_sink(&brain_sink);
 
-    (void)intake_s1.set_brake_mode_all(pros::MotorBrake::coast);
+    chisel::logger::FunctionSink console_sink ([](const chisel::logger::LogEntry& log) {
+        std::printf("%s %s", chisel::prefix(log.timestamp).c_str(), log.log.c_str());
+    });
+
+    (void)intake_stage1.set_brake_mode_all(pros::MotorBrake::coast);
+    (void)intake_stage2.set_brake_mode_all(pros::MotorBrake::coast);
+    (void)intake_indexer.set_brake_mode_all(pros::MotorBrake::coast);
 }
