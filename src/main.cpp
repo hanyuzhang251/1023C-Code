@@ -23,9 +23,9 @@ void initialize() {
 void opcontrol() {
     logger.log({chisel::logger::LogLevel::Info, "Opcontrol started"});
 
-    chassis.state = chisel::State::DRIVE;
+    chassis.state = chisel::State::Driver;
 
-    while (chassis.state == chisel::State::DRIVE) {
+    while (chassis.state == chisel::State::Driver) {
 
         // intake
 

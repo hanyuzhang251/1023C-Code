@@ -59,8 +59,8 @@ namespace chisel
 
         if (!current_motion) mtf_load_current_motion(task_context);
 
-        // Check if current motion is still null after loading. This shouldn't
-        // happen, but one can rarely be too cautious.
+        // Check if the current motion is still null after loading. This
+        // shouldn't happen, but one can rarely be too cautious.
         if (!current_motion) return;
 
         if (mtf_check_motion_exit(task_context))

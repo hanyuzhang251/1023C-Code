@@ -1,19 +1,13 @@
 #pragma once
 
-#include "main.h"
-#include "chisel/data/pose.h"
-#include <iomanip>
-#include <sstream>
-#include <cstdint>
-
 #define digi_button controller_digital_e_t
 #define anlg_button controller_analog_e_t
 
-#define CTRL_ANGL_LX E_CONTROLLER_ANALOG_LEFT_X
-#define CTRL_ANGL_LY E_CONTROLLER_ANALOG_LEFT_Y
+#define CTRL_ANLG_LX E_CONTROLLER_ANALOG_LEFT_X
+#define CTRL_ANLG_LY E_CONTROLLER_ANALOG_LEFT_Y
 
-#define CTRL_ANGL_RX E_CONTROLLER_ANALOG_RIGHT_X
-#define CTRL_ANGL_RY E_CONTROLLER_ANALOG_RIGHT_Y
+#define CTRL_ANLG_RX E_CONTROLLER_ANALOG_RIGHT_X
+#define CTRL_ANLG_RY E_CONTROLLER_ANALOG_RIGHT_Y
 
 #define CTRL_DIGI_L1 E_CONTROLLER_DIGITAL_L1
 #define CTRL_DIGI_L2 E_CONTROLLER_DIGITAL_L2
@@ -30,10 +24,14 @@
 #define CTRL_DIGI_LEFT E_CONTROLLER_DIGITAL_LEFT
 #define CTRL_DIGI_RIGHT E_CONTROLLER_DIGITAL_RIGHT
 
-constexpr int INIT_STATE = 0;
-constexpr int CRASHOUT = 67;
-constexpr int AUTON_STATE = 1;
-constexpr int DRIVE_STATE = 2;
+#include "main.h"
+#include "chisel/data/pose.h"
+#include <iomanip>
+#include <sstream>
+#include <cstdint>
+
+#include "../../../src/robot_config.h"
+#include "chisel/config.h"
 
 /**
  * @brief Analogous to pros::delay()
@@ -47,11 +45,11 @@ inline void wait(const uint32_t delta) {
 namespace chisel {
 
     enum class State {
-        INIT,
-        CRASHOUT,
-        AUTON,
-        DRIVE,
-        SHUTDOWN
+        Init,
+        Crashout,
+        Auton,
+        Driver,
+        End
     };
 
     /**
@@ -169,35 +167,26 @@ namespace chisel {
     /**
      * @brief Timestamp prefix for logs.
      *
-     * @return An std::string of length 15, containing the current timstamp in the format "[mm:ss:SSS]:   "
+     * @return A std::string of length 15, containing the current timestamp in the format "[mm:ss:SSS]:   "
      */
     std::string prefix(uint32_t timestamp = -67);
 
-    /**
-     * @brief Starterpack for a toggle button using true/false inputs from controller.
-     *
-     * Controller provides true/false based on if buttons are pressed.
-     * Making toggle buttons with this system would require two additional variables for each button,
-     * additionally taking up two additional names. Instead, package everything into a struct.
-     *
-     * @note This system can also easily be used to make on press buttons by setting the value back to false every time it is set to true.
-     */
-    struct Toggle {
-        bool value;
-        bool ptrigger;
+    static std::queue<std::pair<std::pair<uint8_t, uint8_t>, std::string>> ctrl_screen_queue;
 
-        /**
-         * @brief Toggle constructor
-         *
-         * @param value_ Starting value of the toggle.
-         */
-        explicit Toggle(bool value_ = false);
+    static void ctrl_screen_update_task_function(void* context) {
+        if (ctrl_screen_queue.empty()) return;
 
-        /**
-         * @brief Updates the toggle with whether the button is pressed or not.
-         *
-         * @param trigger Is the button pressed?
-         */
-        void tick(bool trigger);
-    };
+        const auto [row_col, content] = ctrl_screen_queue.front();
+        ctrl_screen_queue.pop();
+
+        master.set_text(row_col.first, row_col.second, content.c_str());
+
+        if (ctrl_screen_queue.size() >= 8) {
+            const auto logger = static_cast<logger::Logger*>(context);
+            logger->log({
+                logger::LogLevel::Warn,
+                std::format("Ctrl screen queue overflow ({} entries)", ctrl_screen_queue.size())
+            });
+        }
+    }
 } // namespace chisel
