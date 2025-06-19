@@ -186,7 +186,13 @@ namespace chisel {
             const auto logger = static_cast<logger::Logger*>(context);
             logger->log({
                 logger::LogLevel::Warn,
-                std::format("Ctrl screen queue overflow ({} entries)", ctrl_screen_queue.size())
+                std::format("ctrl scrn {} entries behind", ctrl_screen_queue.size())
+            });
+
+            while (ctrl_screen_queue.size() > 8) ctrl_screen_queue.pop();
+            logger->log({
+                logger::LogLevel::Warn,
+                std::format("ctrl scrn skipped {} entries)", ctrl_screen_queue.size() - 8)
             });
         }
     }

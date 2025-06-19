@@ -10,9 +10,9 @@ namespace chisel {
     static void print_pose(void* context) {
         const auto odom_ = static_cast<Odom*>(context);
         const auto& pose = odom_->pose;
-        ctrl_screen_queue.push({{0, 0}, std::format("x={}", pose.x)});
-        ctrl_screen_queue.push({{1, 0}, std::format("y={}", pose.y)});
-        ctrl_screen_queue.push({{2, 0}, std::format("h={}", pose.h)});
+        ctrl_screen_queue.push({{0, 0}, std::format("x={:.4f}", pose.x)});
+        ctrl_screen_queue.push({{1, 0}, std::format("y={:.4f}", pose.y)});
+        ctrl_screen_queue.push({{2, 0}, std::format("h={:.4f}", pose.h)});
     }
 
 
