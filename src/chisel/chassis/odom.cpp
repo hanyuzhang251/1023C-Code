@@ -38,10 +38,8 @@ namespace chisel
             stw_reset = stw->get_position();
 
         // resets the drivetrain motor encoder positions.
-        if (drivetrain) {
-            dtl_reset = drivetrain->left_motor_group->get_position();
-            dtr_reset = drivetrain->right_motor_group->get_position();
-        }
+        dtl_reset = drivetrain->left_motor_group->get_position();
+        dtr_reset = drivetrain->right_motor_group->get_position();
     }
 
     void Odom::setPose(const Pose& pose)
@@ -172,8 +170,6 @@ namespace chisel
         i_pose.x += global_x;
         i_pose.y += global_y;
         i_pose.h = new_heading_rad * (180 / M_PI);
-
-        pose = pose_offset + i_pose;
 
         pi_pose = i_pose;
         if (ltw)

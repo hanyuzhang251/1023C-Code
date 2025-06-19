@@ -1,6 +1,6 @@
 #pragma once
 
-#include "chisel/chassis/drivetrain.h"
+#include "drivetrain.h"
 #include "../../main.h"
 
 #include "../../chisel/data/pose.h"
